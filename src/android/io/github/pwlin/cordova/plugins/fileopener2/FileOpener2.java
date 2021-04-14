@@ -23,6 +23,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package io.github.pwlin.cordova.plugins.fileopener2;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -34,6 +36,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.util.Base64;
 import android.os.Build;
 import android.webkit.MimeTypeMap;
 
@@ -66,11 +69,15 @@ public class FileOpener2 extends CordovaPlugin {
 				openWithDefault = args.getBoolean(2);
 			}
 			this._open(fileUrl, contentType, openWithDefault, callbackContext);
-		}
-		else if (action.equals("uninstall")) {
+		} else if (action.equals("openBase64")) {
+			Boolean openWithDefault = true;
+			if(args.length() > 4){
+				openWithDefault = args.getBoolean(4);
+			}
+			this._openBase64(args.getString(0), args.getString(1), args.getString(2), args.getString(3), openWithDefault, callbackContext);
+		} else if (action.equals("uninstall")) {
 			this._uninstall(args.getString(0), callbackContext);
-		}
-		else if (action.equals("appIsInstalled")) {
+		} else if (action.equals("appIsInstalled")) {
 			JSONObject successObj = new JSONObject();
 			if (this._appIsInstalled(args.getString(0))) {
 				successObj.put("status", PluginResult.Status.OK.ordinal());
@@ -89,6 +96,24 @@ public class FileOpener2 extends CordovaPlugin {
 			callbackContext.error(errorObj);
 		}
 		return true;
+	}
+
+	private void _openBase64(final String fileName, final String fileExtension, final String base64Data, final String contentType,
+			Boolean openWithDefault, final CallbackContext callbackContext)
+			throws JSONException {
+		try {
+			final byte[] decodedData = Base64.decode(base64Data, Base64.DEFAULT);
+			final File outputFile = File.createTempFile(fileName, fileExtension, this.cordova.getActivity().getExternalCacheDir());
+			final FileOutputStream outputStream = new FileOutputStream(outputFile);
+			outputStream.write(decodedData);
+			outputStream.close();
+			_open(outputFile.getAbsolutePath(), contentType, openWithDefault, callbackContext);
+		} catch (final IOException e) {
+			final JSONObject errorObj = new JSONObject();
+			errorObj.put("status", PluginResult.Status.ERROR.ordinal());
+			errorObj.put("message", "Cannot create temporary file in cache");
+			callbackContext.error(errorObj);
+		}
 	}
 
 	private void _open(String fileArg, String contentType, Boolean openWithDefault, CallbackContext callbackContext) throws JSONException {
