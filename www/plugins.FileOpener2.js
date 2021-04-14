@@ -32,6 +32,12 @@ FileOpener2.prototype.open = function (fileName, contentType, callbackContext) {
     exec(callbackContext.success || null, callbackContext.error || null, 'FileOpener2', 'open', [fileName, contentType]);
 };
 
+FileOpener2.prototype.openBase64 = function (fileName, fileExtension, base64Data, contentType, callbackContext) {
+    contentType = contentType || '';
+    callbackContext = callbackContext || {};
+    exec(callbackContext.success || null, callbackContext.error || null, 'FileOpener2', 'openBase64', [fileName, fileExtension, base64Data, contentType]);
+};
+
 FileOpener2.prototype.showOpenWithDialog = function (fileName, contentType, callbackContext) {
     contentType = contentType || '';
     callbackContext = callbackContext || {};
